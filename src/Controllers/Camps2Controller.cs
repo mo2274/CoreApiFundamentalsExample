@@ -10,16 +10,16 @@ using System.Threading.Tasks;
 
 namespace CoreCodeCamp.Controllers
 {
-    [Route("api/[Controller]")]
+    [Route("api/camps")]
     [ApiController]
-    [ApiVersion("1.0")]
-    public class CampsController : ControllerBase
+    [ApiVersion("1.1")]
+    public class Camps2Controller : ControllerBase
     {
         private readonly ICampRepository campRepository;
         private readonly IMapper mapper;
         private readonly LinkGenerator linkGenerator;
 
-        public CampsController(ICampRepository campRepository, IMapper mapper, LinkGenerator linkGenerator)
+        public Camps2Controller(ICampRepository campRepository, IMapper mapper, LinkGenerator linkGenerator)
         {
             this.campRepository = campRepository;
             this.mapper = mapper;
@@ -27,13 +27,17 @@ namespace CoreCodeCamp.Controllers
         }
 
         [HttpGet]
-        [MapToApiVersion("2.0")]
-        public async Task<ActionResult<CampModel[]>> Get(bool includeTalks = false)
+        public async Task<ActionResult> Get(bool includeTalks = false)
         {
             try
             {
                 var result = await campRepository.GetAllCampsAsync(includeTalks);
-                return mapper.Map<CampModel[]>(result);
+                var output = new
+                {
+                    count = result.Count(),
+                    data = mapper.Map<CampModel[]>(result)
+                };
+                return Ok(output);
             }
             catch (System.Exception)
             {
@@ -41,20 +45,6 @@ namespace CoreCodeCamp.Controllers
             }
         }
 
-        [HttpGet]
-        [MapToApiVersion("2.1")]
-        public async Task<ActionResult<CampModel[]>> Get21(bool includeTalks = true)
-        {
-            try
-            {
-                var result = await campRepository.GetAllCampsAsync(includeTalks);
-                return mapper.Map<CampModel[]>(result);
-            }
-            catch (System.Exception)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, "Database Failure");
-            }
-        }
 
         [HttpGet("{moniker}")]
         public async Task<ActionResult<CampModel>> GetCamp(string moniker, bool includeTalks = false)
